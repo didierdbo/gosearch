@@ -1,0 +1,8 @@
+{
+    "go.formatTool": "gofmt",
+    "editor.formatOnSave": true,
+    "[go]": {
+        "editor.defaultFormatter": "golang.go"
+    },
+    "liveServer.settings.port": 5501
+}
