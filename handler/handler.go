@@ -19,7 +19,7 @@ func SearchHandler(searcher search.Searcher) http.HandlerFunc {
 			http.Error(w, "missing q parameter", http.StatusBadRequest)
 			return
 		}
-		results := searcher.Search(q)
+		results := searcher.Search(r.Context(), q)
 
 		sr := search.SearchResult{
 			Query:   q,

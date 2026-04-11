@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ type SearchResult struct {
 	Results []Document `json:"results"`
 }
 
-func Search(query string, docs []Document) []Document {
+func Search(ctx context.Context, query string, docs []Document) []Document {
 	results := []Document{}
 	if query == "" {
 		return results
