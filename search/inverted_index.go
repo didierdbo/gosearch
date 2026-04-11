@@ -4,7 +4,13 @@ type InvertedIndex struct {
 	TokenIDsMap map[string][]string `json:"token_ids"`
 }
 
-func AddDoc(index InvertedIndex, doc Document) error {
+func NewInvertedIndex() *InvertedIndex {
+	return &InvertedIndex{
+		TokenIDsMap: map[string][]string{},
+	}
+}
+
+func (index *InvertedIndex) AddDoc(doc Document) error {
 	result := Tokenize(doc.Content)
 	for _, token := range result {
 		ids, ok := index.TokenIDsMap[token]

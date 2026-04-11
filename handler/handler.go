@@ -8,7 +8,7 @@ import (
 	"github.com/didierdbo/gosearch/search"
 )
 
-func SearchHandler(docs []search.Document) http.HandlerFunc {
+func SearchHandler(searcher search.Searcher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -19,7 +19,7 @@ func SearchHandler(docs []search.Document) http.HandlerFunc {
 			http.Error(w, "missing q parameter", http.StatusBadRequest)
 			return
 		}
-		results := search.Search(q, docs)
+		results := searcher.Search(r.Context(), q)
 
 		sr := search.SearchResult{
 			Query:   q,

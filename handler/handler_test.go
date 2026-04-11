@@ -20,8 +20,8 @@ var secondDoc search.Document = search.Document{
 func TestValidRequest(t *testing.T) {
 	request := httptest.NewRequest("GET", "/search?q=go", nil)
 	recorder := httptest.NewRecorder()
-	docs := []search.Document{firstDoc, secondDoc}
-	SearchHandler(docs)(recorder, request)
+	searcher := search.NewLinearSearcher([]search.Document{firstDoc, secondDoc})
+	SearchHandler(searcher)(recorder, request)
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", recorder.Code)
 	}
@@ -30,8 +30,8 @@ func TestValidRequest(t *testing.T) {
 func TestMissingQuery(t *testing.T) {
 	request := httptest.NewRequest("GET", "/search", nil)
 	recorder := httptest.NewRecorder()
-	docs := []search.Document{firstDoc, secondDoc}
-	SearchHandler(docs)(recorder, request)
+	searcher := search.NewLinearSearcher([]search.Document{firstDoc, secondDoc})
+	SearchHandler(searcher)(recorder, request)
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("expected status 400, got %d", recorder.Code)
 	}
@@ -40,8 +40,8 @@ func TestMissingQuery(t *testing.T) {
 func TestBadHttpMethod(t *testing.T) {
 	request := httptest.NewRequest("POST", "/search?q=go", nil)
 	recorder := httptest.NewRecorder()
-	docs := []search.Document{firstDoc, secondDoc}
-	SearchHandler(docs)(recorder, request)
+	searcher := search.NewLinearSearcher([]search.Document{firstDoc, secondDoc})
+	SearchHandler(searcher)(recorder, request)
 	if recorder.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("expected status 405, got %d", recorder.Code)
 	}
