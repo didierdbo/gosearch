@@ -9,7 +9,6 @@ var doc Document = Document{
 	Content: "test match on go",
 }
 
-// func TestTokenize_SimpleSplit(t *testing.T) {
 func TestAddDocument(t *testing.T) {
 	invertedIndex := NewInvertedIndex()
 	invertedIndex.AddDoc(doc)
