@@ -11,8 +11,8 @@ var doc Document = Document{
 
 // func TestTokenize_SimpleSplit(t *testing.T) {
 func TestAddDocument(t *testing.T) {
-	invertedIndex := InvertedIndex{}
-	AddDoc(invertedIndex, doc)
+	invertedIndex := NewInvertedIndex()
+	invertedIndex.AddDoc(doc)
 	val, ok := invertedIndex.TokenIDsMap["go"]
 
 	if !ok {
