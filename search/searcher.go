@@ -32,3 +32,5 @@ func NewLinearSearcher(docs []Document) *LinearSearcher {
 func (s *LinearSearcher) Search(ctx context.Context, query string) []Document {
 	return Search(ctx, query, s.Docs)
 }
+
+var _ Searcher = (*LinearSearcher)(nil)
