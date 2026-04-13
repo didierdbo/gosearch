@@ -17,7 +17,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	searcher := search.NewLinearSearcher(docs)
+	searcher := search.NewBM25Searcher(docs)
 	http.HandleFunc("/search", handler.SearchHandler(searcher))
 	fmt.Println("Server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

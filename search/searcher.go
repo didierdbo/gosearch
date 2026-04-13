@@ -1,6 +1,10 @@
 package search
 
-import "context"
+import (
+	"cmp"
+	"context"
+	"slices"
+)
 
 // Searcher is the contract for anything that can answer a query with a
 // ranked (or unranked) list of matching documents. The current linear
@@ -33,4 +37,47 @@ func (s *LinearSearcher) Search(ctx context.Context, query string) []Document {
 	return Search(ctx, query, s.Docs)
 }
 
+type BM25Searcher struct {
+	Docs  []Document
+	Index *InvertedIndex
+	// Note: we keep Docs around because Search() returns []Document,
+	// and the index only stores IDs. A future version could keep a
+	// docID -> *Document lookup map if we want to drop the slice.
+}
+
+func NewBM25Searcher(docs []Document) *BM25Searcher {
+	return &BM25Searcher{
+		Docs:  docs,
+		Index: BuildIndex(docs),
+	}
+}
+
+type match struct {
+	score    float64
+	document Document
+}
+
+func (s *BM25Searcher) Search(ctx context.Context, query string) []Document {
+	queryTerms := Tokenize(query)
+
+	matches := []match{}
+	for _, doc := range s.Docs {
+		score := BM25Score(queryTerms, doc.ID, s.Index)
+		if score > 0 {
+			matches = append(matches, match{score: score, document: doc})
+		}
+	}
+
+	slices.SortStableFunc(matches, func(a, b match) int {
+		return cmp.Compare(b.score, a.score) // b before a = descending
+	})
+
+	results := []Document{}
+	for _, m := range matches {
+		results = append(results, m.document)
+	}
+	return results
+}
+
 var _ Searcher = (*LinearSearcher)(nil)
+var _ Searcher = (*BM25Searcher)(nil)
