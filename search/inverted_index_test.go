@@ -124,3 +124,43 @@ func TestScoreTF_SaturatesWithMoreOccurrences(t *testing.T) {
 	}
 
 }
+
+func TestIDF_RareTermHigherThanCommonTerm(t *testing.T) {
+	rare := idf(1, 1000)          // in 1 doc out of 1000
+	common := idf(500, 1000)      // in half the corpus
+	everywhere := idf(1000, 1000) // in every doc
+
+	if !(rare > common && common > everywhere) {
+		t.Fatalf("IDF ordering wrong: rare=%f common=%f everywhere=%f",
+			rare, common, everywhere)
+	}
+	if everywhere < 0 {
+		t.Fatalf("smoothed IDF must not go negative, got %f", everywhere)
+	}
+}
+
+func TestBM25Score_HandComputed(t *testing.T) {
+	docs := []Document{
+		{ID: "a", Content: "the quick brown fox"},
+		{ID: "b", Content: "the lazy dog"},
+		{ID: "c", Content: "quick brown quick"},
+	}
+	idx := BuildIndex(docs)
+
+	// Query: "quick"
+	//   N = 3, df(quick) = 2, so idf = ln((3-2+0.5)/(2+0.5) + 1) = ln(1.6)
+	//   For doc c: tf=2, |D|=3, avgdl=10/3
+	//     length_norm = 1 - 0.75 + 0.75 * 3 / (10/3) = 0.25 + 0.675 = 0.925
+	//     denom = 2 + 1.2 * 0.925 = 3.11
+	//     numer = 2 * 2.2 = 4.4
+	//     tf_component = 4.4 / 3.11 ≈ 1.4148
+	//     score = ln(1.6) * 1.4148 ≈ 0.470 * 1.4148 ≈ 0.6650
+	//
+	// Compute this by hand, paste the expected value below, and
+	// let the test enforce your understanding.
+	got := BM25Score([]string{"quick"}, "c", idx)
+	want := 0.6650
+	if math.Abs(got-want) > 1e-3 {
+		t.Fatalf("BM25Score: want ~%f, got %f", want, got)
+	}
+}

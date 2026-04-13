@@ -1,5 +1,14 @@
 package search
 
+import (
+	"math"
+)
+
+const (
+	BM25K1 = 1.2
+	BM25B  = 0.75
+)
+
 type InvertedIndex struct {
 	Postings   map[string]map[string]int `json:"postings"`
 	DocLengths map[string]int            `json:"doc_lengths"`
@@ -63,11 +72,46 @@ func (index *InvertedIndex) AddDoc(doc Document) error {
 //	avgdl  : average document length across the corpus
 //	k1, b  : BM25 tuning parameters
 func scoreTF(tf, docLen int, avgdl, k1, b float64) float64 {
-	// TODO: write this using the formula from Section 1.
-	// Hint: the numerator is tf*(k1+1), the denominator involves
-	// tf + k1 * (1 - b + b * docLen/avgdl). Cast ints to float64.
 	num := float64(tf) * (k1 + 1)
 	den := float64(tf) + k1*(1-b+b*(float64(docLen)/avgdl))
-
 	return num / den
+}
+
+// idf computes the smoothed inverse document frequency for a term.
+//
+// Parameters:
+//   df : number of documents containing the term (document frequency)
+//   N  : total number of documents in the corpus
+//
+// Uses the BM25+ / Lucene smoothing:
+//   idf = ln( (N - df + 0.5) / (df + 0.5) + 1 )
+func idf(df, N int) float64 {
+	dfFloat := float64(df)
+	nFloat := float64(N)
+	return math.Log(((nFloat - dfFloat + 0.5) / (dfFloat + 0.5)) + 1)
+}
+
+// BM25Score computes the BM25 relevance score of a document for a
+// tokenized query. Returns 0 if the document does not contain any
+// of the query terms.
+//
+// queryTerms : already tokenized (use the same Tokenize() as indexing!)
+// docID      : the document to score
+// idx        : the fully built inverted index
+func BM25Score(queryTerms []string, docID string, idx *InvertedIndex) float64 {
+	var score float64
+	for _, term := range queryTerms {
+		df := len(idx.Postings[term])
+		if df == 0 {
+			continue
+		}
+		tf := idx.Postings[term][docID]
+		if tf == 0 {
+			continue
+		}
+		termIDF := idf(df, idx.TotalDocs)
+		tfComponent := scoreTF(tf, idx.DocLengths[docID], idx.AvgDocLen, BM25K1, BM25B)
+		score += termIDF * tfComponent
+	}
+	return score
 }
