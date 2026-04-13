@@ -56,3 +56,22 @@ func TestInsensitive(t *testing.T) {
 		t.Fatalf("expected 2 results, got %d", len(results))
 	}
 }
+
+func TestBM25Searcher_RanksByRelevance(t *testing.T) {
+	docs := []Document{
+		{ID: "a", Content: "the quick brown fox"},
+		{ID: "b", Content: "the lazy dog"},
+		{ID: "c", Content: "quick brown quick"},
+	}
+	s := NewBM25Searcher(docs)
+	results := s.Search(context.Background(), "quick brown")
+
+	if len(results) != 2 {
+		t.Fatalf("want 2 results, got %d", len(results))
+	}
+	// doc c mentions "quick" twice and "brown" once, doc a mentions each once.
+	// c should rank first.
+	if results[0].ID != "c" {
+		t.Fatalf("want doc c first, got %s", results[0].ID)
+	}
+}
