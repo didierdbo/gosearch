@@ -51,3 +51,23 @@ func (index *InvertedIndex) AddDoc(doc Document) error {
 
 	return nil
 }
+
+// scoreTF returns the BM25 term-frequency component for a single
+// (term, document) pair. It is the fraction on the right-hand side
+// of the BM25 sum, without the IDF factor.
+//
+// Parameters:
+//
+//	tf     : term frequency of the term in the document
+//	docLen : length of the document in tokens
+//	avgdl  : average document length across the corpus
+//	k1, b  : BM25 tuning parameters
+func scoreTF(tf, docLen int, avgdl, k1, b float64) float64 {
+	// TODO: write this using the formula from Section 1.
+	// Hint: the numerator is tf*(k1+1), the denominator involves
+	// tf + k1 * (1 - b + b * docLen/avgdl). Cast ints to float64.
+	num := float64(tf) * (k1 + 1)
+	den := float64(tf) + k1*(1-b+b*(float64(docLen)/avgdl))
+
+	return num / den
+}
