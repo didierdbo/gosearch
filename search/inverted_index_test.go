@@ -1,6 +1,7 @@
 package search
 
 import (
+	"math"
 	"testing"
 )
 
@@ -53,5 +54,30 @@ func TestAddMultipleDocuments(t *testing.T) {
 	}
 	if idx.TotalDocs != 3 {
 		t.Fatalf("expected TotalDocs=3, got %d", idx.TotalDocs)
+	}
+}
+
+func TestBuildIndex(t *testing.T) {
+	docs := []Document{
+		{ID: "a", Content: "the quick brown fox"}, // 4 tokens
+		{ID: "b", Content: "the lazy dog"},        // 3 tokens
+		{ID: "c", Content: "quick brown quick"},   // 3 tokens
+	}
+	idx := BuildIndex(docs)
+
+	if idx.TotalDocs != 3 {
+		t.Fatalf("TotalDocs: want 3, got %d", idx.TotalDocs)
+	}
+	// avgdl = (4+3+3)/3 = 3.333...
+	if math.Abs(idx.AvgDocLen-10.0/3.0) > 1e-9 {
+		t.Fatalf("AvgDocLen: want ~3.333, got %f", idx.AvgDocLen)
+	}
+	// "quick" appears in docs a and c, with tf=1 and tf=2
+	if idx.Postings["quick"]["a"] != 1 || idx.Postings["quick"]["c"] != 2 {
+		t.Fatalf("quick postings wrong: %+v", idx.Postings["quick"])
+	}
+	// df("quick") = 2
+	if len(idx.Postings["quick"]) != 2 {
+		t.Fatalf("df(quick): want 2, got %d", len(idx.Postings["quick"]))
 	}
 }
